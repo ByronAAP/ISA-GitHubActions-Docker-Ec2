@@ -1,46 +1,42 @@
-name: Docker Image CI /Byron 
+name: Docker Image CI / Byron
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-
   build:
     name: Build Docker image and push to repositories
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Login to Dockerhub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-        
-    - name: Build and push
-      uses: docker/build-push-action@v4
-      with:
-      context: .
-      push: true
-      tags: byronangulo/isa-cicd-docker-ec2:flaskapp
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Deployment
-      uses: appleboy/ssh-action@v0.1.8
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        port: ${{ secrets.SSH_PORT }}
-        scripts:
-         docker image pull byronangulo/isa-cicd-docker-ec2:flaskapp
-         docker container stop flask
-         docker container rm flask
-         docker container run -d --name flask -p80:5000 byronangulo/isa-cicd-docker-ec2:flaskapp
-        
-      
-      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: byronangulo/isa-cicd-docker-ec2:flaskapp
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            docker pull byronangulo/isa-cicd-docker-ec2:flaskapp
+            docker stop flask || true
+            docker rm flask || true
+            docker run -d --name flask -p 80:5000 byronangulo/isa-cicd-docker-ec2:flaskapp
