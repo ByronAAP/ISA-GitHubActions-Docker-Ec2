@@ -25,9 +25,9 @@ jobs:
     - name: Build and push
       uses: docker/build-push-action@v4
       with:
-      context: .
-      push: true
-      tags: byronangulo/isa-cicd-docker-ec2:flaskapp
+       context: .
+       push: true
+       tags: byronangulo/isa-cicd-docker-ec2:flaskapp
 
     - name: Deployment
       uses: appleboy/ssh-action@v0.1.8
